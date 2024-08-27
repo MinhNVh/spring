@@ -2,9 +2,6 @@ pipeline {
 
     agent any
 
-    tools { 
-        maven 'my-maven' 
-    }
     environment {
         MYSQL_ROOT_LOGIN = credentials('mysql-root-login')
     }
@@ -13,6 +10,7 @@ pipeline {
             steps {
                 echo 'Deploying and cleaning'
                 sh 'docker image pull mysql:8.0'
+                echo 'pull mysql:8.0'
                 sh 'docker network create dev || echo "this network exists"'
                 sh 'docker container stop minh-mysql || echo "this container does not exist" '
                 sh 'echo y | docker container prune '
@@ -20,6 +18,7 @@ pipeline {
 
                 sh "docker run --name minh-mysql --rm --network dev -v minh-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_LOGIN_PSW} -e MYSQL_DATABASE=db_example  -d mysql:8.0 "
                 sh 'sleep 20'
+                echo 'sleep 20'
                 sh "docker exec -i minh-mysql mysql --user=root --password=${MYSQL_ROOT_LOGIN_PSW} < script"
             }
         }
