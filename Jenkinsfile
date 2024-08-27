@@ -9,25 +9,6 @@ pipeline {
         MYSQL_ROOT_LOGIN = credentials('mysql-root-login')
     }
     stages {
-
-        stage('Build with Maven') {
-            steps {
-                sh 'mvn --version'
-                sh 'java -version'
-                sh 'mvn clean package -Dmaven.test.failure.ignore=true'
-            }
-        }
-
-        stage('Packaging/Pushing imagae') {
-
-            steps {
-                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
-                    sh 'docker build -t minh/springboot .'
-                    sh 'docker push minh/springboot'
-                }
-            }
-        }
-
         stage('Deploy MySQL to DEV') {
             steps {
                 echo 'Deploying and cleaning'
@@ -42,19 +23,6 @@ pipeline {
                 sh "docker exec -i minh-mysql mysql --user=root --password=${MYSQL_ROOT_LOGIN_PSW} < script"
             }
         }
-
-        stage('Deploy Spring Boot to DEV') {
-            steps {
-                echo 'Deploying and cleaning'
-                sh 'docker image pull minh/springboot'
-                sh 'docker container stop minh-springboot || echo "this container does not exist" '
-                sh 'docker network create dev || echo "this network exists"'
-                sh 'echo y | docker container prune '
-
-                sh 'docker container run -d --rm --name minh-springboot -p 8081:8080 --network dev minh/springboot'
-            }
-        }
- 
     }
     post {
         // Clean after build
